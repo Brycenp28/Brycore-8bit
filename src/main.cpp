@@ -1,33 +1,22 @@
 #include <iostream>
 #include <fstream>
-#include "Brycore.h"
-
-using namespace std;
+#include "lib/Brycore.h"
 
 int main(int argc, const char *args[]) {
-	char temp[255];
 
-	ifstream infile(args[1]);
+	char temp[256];
+
+	std::ifstream infile(args[1], std::ios_base::binary);
 
 	if (!infile.is_open()) {
-		cout << "file not found!" << endl;
+		std::cout << "file not found!" << std::endl;
 		return 0;
 	};
-	
-	infile.seekg(0, std::ios::end);
-	size_t length = infile.tellg();
-	infile.seekg(0, std::ios::beg);
 
-	if (length > sizeof (temp))
-	{
-    	length = sizeof (temp);
-	};
-
-
-	infile.read(temp, length);
+	infile.read(temp, sizeof(temp));
 
 	Brycore b(temp);
 	b.execute();
-	
+	infile.close();
 	return 0;
 }
