@@ -262,8 +262,10 @@ void Brycore::CMP() {
 		}else {
 			 test = this->r[*(IP+1)] - *(begining+this->r[r]-c);
 		};
-	}else {
+	}else if (*IP == 42) {
 		test = this->r[*(IP+1)] - *(IP+2);
+	}else {
+		test = this->r[*(IP+1)] - *(begining+this->r[*(IP+2)])
 	};
 
 	render_carry(test, flag);
@@ -273,7 +275,7 @@ void Brycore::CMP() {
 
 void Brycore::SHL() {
 
-	if (*IP == 43) {
+	if (*IP == 44) {
 	r[0] = (r[0] << *(IP+1));
 	} else {
 		r[0] = (r[0] << r[*(IP+1)]);
@@ -284,7 +286,7 @@ void Brycore::SHL() {
 
 void Brycore::SHR() {
 
-	if (*IP == 45) {
+	if (*IP == 46) {
 	r[0] = (r[0] >> *(IP+1));
 	} else {
 		r[0] = (r[0] >> r[*(IP+1)]);
@@ -295,7 +297,7 @@ void Brycore::SHR() {
 
 void Brycore::AND() {
 
-	if (*IP == 47) {
+	if (*IP == 48) {
 		r[*(IP+1)] = (r[*(IP+1)] & *(IP+2));
 	}else {
 		r[*(IP+1)] = (r[*(IP+1)] & r[*(IP+2)]);
@@ -306,7 +308,7 @@ void Brycore::AND() {
 
 void Brycore::OR() {
 
-	if (*IP == 49) {
+	if (*IP == 50) {
 		r[*(IP+1)] = (r[*(IP+1)] | *(IP+2));
 	}else {
 		r[*(IP+1)] = (r[*(IP+1)] | r[*(IP+2)]);
@@ -317,7 +319,7 @@ void Brycore::OR() {
 
 void Brycore::XOR() {
 
-	if (*IP == 51) {
+	if (*IP == 52) {
 		r[*(IP+1)] = (r[*(IP+1)] ^ *(IP+2));
 	}else {
 		r[*(IP+1)] = (r[*(IP+1)] ^ r[*(IP+2)]);
@@ -335,7 +337,7 @@ void Brycore::NOT() {
 
 void Brycore::CALL() {
 
-	if (*IP == 54) {
+	if (*IP == 55) {
 		--r[5];
 		*(begining+r[5]) = (IP - begining)+2;
 		IP = begining+r[*(IP+1)];
@@ -395,36 +397,36 @@ void Brycore::execute() {
 			INC();
 		}else if (*IP == 38) {
 			DEC();
-		}else if (*IP >= 39 && *IP <= 42) {
+		}else if (*IP >= 39 && *IP <= 43) {
 			CMP();
-		}else if (*IP >= 43 && *IP <= 44) {
+		}else if (*IP >= 44 && *IP <= 45) {
 			SHL();
 		}
-		else if (*IP >= 43 && *IP <= 44) {
+		else if (*IP >= 46 && *IP <= 47) {
 			SHR();
 		}
-		else if (*IP >= 47 && *IP <= 48) {
+		else if (*IP >= 48 && *IP <= 49) {
 			AND();
 		}
-		else if (*IP >= 49 && *IP <= 50) {
+		else if (*IP >= 50 && *IP <= 51) {
 			OR();
 		}
-		else if (*IP >= 51 && *IP <= 52) {
+		else if (*IP >= 52 && *IP <= 53) {
 			XOR();
 		}
-		else if (*IP == 53) {
+		else if (*IP == 54) {
 			NOT();
 		}
-		else if (*IP >= 54 && *IP <= 55) {
+		else if (*IP >= 55 && *IP <= 56) {
 			CALL();
 		}
-		else if (*IP == 56) {
+		else if (*IP == 57) {
 			RET();
 		}
-		else if (*IP == 57) {
+		else if (*IP == 58) {
 			LEA();
 		}
-		else if (*IP == 58) {
+		else if (*IP == 59) {
 			std::cout << "A: " << static_cast<unsigned>(r[0]) << std::endl;
 			std::cout << "B: " << static_cast<unsigned>(r[1]) << std::endl;
 			std::cout << "C: " << static_cast<unsigned>(r[2]) << std::endl;
@@ -433,7 +435,7 @@ void Brycore::execute() {
 			std::cout << "SP: " << static_cast<unsigned>(r[5]) << std::endl;
 			IP++;
 		}
-		else if (*IP == 59) {
+		else if (*IP == 60) {
 			std::cout << std::boolalpha;
 			std::cout << flag->CF << ":" << flag->ZF << std::endl;
 			std::cout << std::boolalpha;
