@@ -260,8 +260,6 @@ def assemble(data=None):
 					lines[i] = " ".join(replace_array)
 					replace_array = []
 
-		print(lines)
-
 		for i, c in enumerate(lines):
 			inst.append(re.findall(r'\S+', lines[i]))
 			inst = [x for x in inst if x != []]
@@ -289,16 +287,15 @@ def assemble(data=None):
 
 			label = re.search(r'((?=[a-zA-z_\.])[a-zA-Z0-9_\.]*):',c[0])
 
-			hasComment = False
 
 			for i, c2 in enumerate(c):
 				if ';' in c2:
-					hasComment = True
-				if hasComment:
-					c[i].replace(c2, '')
+					for i2 in range(len(c) - i):
+						c.pop(i)
+					break
 
 
-			if label == None:
+			if (label == None):
 				ip += len(c)
 				continue
 
@@ -316,6 +313,8 @@ def assemble(data=None):
 		bytelist2 = [] #binary version.
 
 		for i, c in enumerate(inst):
+			if c == []:
+				continue
 			if not getType(c[0]) == 1:
 				if translate(c) != []:
 					for x in translate(c):

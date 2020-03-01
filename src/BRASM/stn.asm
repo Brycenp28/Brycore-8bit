@@ -4,16 +4,16 @@
 jmp %_start
 
 numstr:
-	.str "255" ; string: numstr.
+	.str "106" ; string: numstr.
 
 _start: ; starts the program with the stack location.
 	xor sp, sp
 	mov bp, sp
-	call %.main
+	call %main
 	dr
 	hlt
 
-.main: ; main function.
+main: ; main function.
 	push bp
 	mov bp, sp
 	push %numstr
@@ -41,7 +41,7 @@ str_to_num: ; converts string to num.
 
 	mov b, 1
 
-.stn_loop: ; string to number loop.
+stn_loop: ; string to number loop.
 	mov a, [c]
 	sub a, 48
 	mul b
@@ -61,7 +61,7 @@ str_to_num: ; converts string to num.
 	dec c
 	dec d
 	cmp d, 0
-	jnz %.stn_loop
+	jnz %stn_loop
 	mov a, [bp-3]
 	pop d
 	pop c
