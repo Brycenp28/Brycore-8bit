@@ -150,7 +150,7 @@ Brycore requires one argument when running the program, the argument being the f
 
 Creating an example assembly file.
 
-    ~/Brycore-8bit/src$
+    ~/Brycore-8bit/src/BRASM$
     vim test.asm
     
     mov a, 34
