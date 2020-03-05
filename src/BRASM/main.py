@@ -81,9 +81,7 @@ instructions = {
 
 'LEA_02':58,
 
-'DR_':59,
-'DF_':60
-
+'INT_4': 59,
 }
 
 '''
@@ -109,7 +107,7 @@ registers = {
 'SP':5
 }
 
-labels = {}
+labels = {} # list for all the labels with adresses.
 
 def isnumeric_array(data):
 	for c in data:
@@ -117,23 +115,56 @@ def isnumeric_array(data):
 			return 0
 	return 1
 
-def check_label(c,raw=False):
+def get_local_label(label_name,ip):
+
+	n = []
+	v = []
+	location = 0
+
+	for names, values in labels.items():
+		if '.' in names:
+			continue
+		n.append(names)
+		v.append(values)
+
+	print("ip: ", ip)
+
+	for i, value in enumerate(v):
+		print("index: {0}, value: {1}".format(i,value))
+
+		if ip >= value:
+			location = i
+
+	name = n[location] + label_name
+
+	print("Name: {0}, location: {1}.".format(name,labels[name]))
+
+	return str(labels[name])
+
+
+def check_label(c,ip,raw=False):
 	if '%' in c:
 		regex = re.compile(r'%((?=[a-zA-z_\.])[a-zA-Z0-9_\.]*)')
+		label = regex.search(c).group(1) #str(labels[regex.search(c).group(1)])
+
+		if label[0] == '.':
+			label = get_local_label(label,ip)
+		else:
+			label = str(labels[regex.search(c).group(1)])
+
 		if not raw:
-			return c.replace(regex.search(c).group(0), str(labels[regex.search(c).group(1)]))
-		return str(labels[regex.search(c).group(1)])
-	return c
+			return c.replace(regex.search(c).group(0), label)
+
+		return label
 
 def getType(data):
-	if (re.match(r'^\w{2,3}(?!:)',data)):
-		return 0
-	if (re.search(r'^\s*\w+:', data) is not None):
+	if (re.search(r'((?=[a-zA-z_\.])[a-zA-Z0-9_\.]*):', data) is not None):
 		return 1
-	return -1
+	else:
+		return 0
 
 
-def getArgMode(inst, raw=False): 
+def getArgMode(inst, ip, raw=False): 
 	am = str('')
 	syntaxErr = True
 
@@ -144,7 +175,8 @@ def getArgMode(inst, raw=False):
 			break
 
 		if '%' in c:
-			c = check_label(c)
+			c = check_label(c,ip)
+
 
 		if c.upper() in registers: # register.
 			am += '0'
@@ -152,13 +184,13 @@ def getArgMode(inst, raw=False):
 		elif (re.search(r'\[[a-z]{1,2}\]',str(c)) is not None): # register addr.
 			am += '1'
 			syntaxErr = False
-		elif (re.search(r'\[\w{1,2}(\+|\-)(\d{1,2}|0x[a-f0-9]{1,2})\]', str(c)) is not None): # register +/- offset.
+		elif (re.search(r'\[\w{1,2}(\+|\-)(\d{1,2})\]', str(c)) is not None): # register +/- offset.
 			am += '2'
 			syntaxErr = False
-		elif (re.search(r'\[(0x)?[a-f0-9]{1,2}\]|\[\d{1,3}\]', str(c)) is not None): # const-addr.
+		elif (re.search(r'\[\d{1,3}\]', str(c)) is not None): # const-addr.
 			am += '3'
 			syntaxErr = False
-		elif (re.search(r'0x[a-f0-9]{1,2}|\d{1,3}', str(c)) is not None): # const.
+		elif (re.search(r'\d{1,3}', str(c)) is not None): # const.
 			am += '4'
 			syntaxErr = False
 
@@ -170,10 +202,11 @@ def getArgMode(inst, raw=False):
 def add_label(name, data):
 	labels[name] = data;
 
-def translate(data):
-	mode = getArgMode(data)
-	raw_mode = getArgMode(data,True)
+def translate(index, data, ip):
+	mode = getArgMode(data,ip)
+	raw_mode = getArgMode(data, ip, True)
 	bytelist = []
+	print(mode)
 
 	if isnumeric_array(data) == 1:
 		for n in data:
@@ -185,6 +218,9 @@ def translate(data):
 		if ';' in c:
 			break
 
+		if '%' in c:
+			c = check_label(c,ip)
+
 		if (i == 0) and (raw_mode != "skip"):
 
 			if instructions.get(mode.upper()):
@@ -193,7 +229,7 @@ def translate(data):
 				if mode.upper() == 'HLT_':
 					bytelist.append(0)
 					continue
-				errmsg = "ERR brasm > '"+', '.join(data)+"', opcode: "+mode+" can't be found."
+				errmsg = "ERR brasm > [Instruction: {0}]: '{1}', Invalid syntax.".format(index,' '.join(data))
 				print(errmsg)
 				exit()
 
@@ -224,12 +260,12 @@ def translate(data):
 
 			bytelist.append(build_flag)
 
-		elif (raw_mode[i-1] == '3') or (raw_mode[i-1] == '4'):
-			
-			c = check_label(c,True)
-
-			bytelist.append(int(c,0)) 
-
+		elif (raw_mode[i-1] == '3'):
+			c = c.replace('[', '')
+			c = c.replace(']', '')
+			bytelist.append(int(c,0))
+		elif (raw_mode[i-1] == '4'):
+			bytelist.append(int(c,0))
 
 	return bytelist
 
@@ -278,31 +314,38 @@ def assemble(data=None):
 				replace_array = []
 				continue
 
-		for x in inst:
-			print(x)
-
 		ip = 0
 		print("brasm > locating labels.")
+
+		last_label = str()
+
 		for i, c in enumerate(inst):
 
 			label = re.search(r'((?=[a-zA-z_\.])[a-zA-Z0-9_\.]*):',c[0])
 
 
-			for i, c2 in enumerate(c):
+			for i, c2 in enumerate(c): # strips comments.
 				if ';' in c2:
 					for i2 in range(len(c) - i):
 						c.pop(i)
 					break
 
-
 			if (label == None):
 				ip += len(c)
 				continue
+			else:
+				if '.' in label.group(1):
+					labels[label.group(1).replace('.',last_label + '.')] = ip
+					print("brasm > added local label for {0} at location {1}.".format(last_label,ip))
+					continue
+				else:
+					last_label = label.group(1)
 
-			if not label.group(1) in labels:
+			if (not label.group(1) in labels) or (not last_label+label.group(1) in labels):
 				labels[label.group(1)] = ip
 				print("brasm > added label {0} at location {1}.".format(label.group(1),str(ip)))
-
+			else:
+				print("ERR brasm > Redeclaration of label {0}.".format(label.group(1)))
 
 		if labels == {}:
 			print("brasm > no labels found.")
@@ -311,13 +354,19 @@ def assemble(data=None):
 
 		ip = 0
 		bytelist2 = [] #binary version.
+		for x in labels:
+			last_label = x
+			break # to get the first label to start the program
 
 		for i, c in enumerate(inst):
 			if c == []:
 				continue
-			if not getType(c[0]) == 1:
-				if translate(c) != []:
-					for x in translate(c):
+			if getType(c[0]) == 0:
+
+				t = translate(i,c,ip)
+
+				if t != []:
+					for x in t:
 						bytelist2.append(x)
 				ip += len(c)
 
@@ -331,4 +380,5 @@ def assemble(data=None):
 def main():
 	assemble()
 
-main()
+if __name__ == "__main__":
+	main()

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ncurses.h>
 #include "Brycore.h"
 
 struct Brycore::flags {
@@ -12,11 +13,18 @@ Brycore::Brycore(char program[]) {
 	flag = new flags;
 	flag->CF = false;
 	flag->ZF = false;
+	initscr();
+	raw();
 }
 
 Brycore::~Brycore() {
 	delete flag;
 	flag = NULL;
+	endwin();
+}
+
+char Brycore::gc() {
+	return getch();
 }
 
 bool Brycore::render_carry(int test, flags *flag) {
@@ -265,7 +273,7 @@ void Brycore::CMP() {
 	}else if (*IP == 42) {
 		test = this->r[*(IP+1)] - *(IP+2);
 	}else {
-		test = this->r[*(IP+1)] - *(begining+this->r[*(IP+2)])
+		test = this->r[*(IP+1)] - *(begining+this->r[*(IP+2)]);
 	};
 
 	render_carry(test, flag);
@@ -369,6 +377,28 @@ void Brycore::LEA() {
 	IP += 3;
 }
 
+void Brycore::IRQ() {
+	unsigned char call = *(IP+1);
+	if (call == 0) { // get char.
+		unsigned char character = gc();
+
+		if (character == 10) {
+			int x, y;
+			getyx(stdscr,y, x);
+			move(y+1,x);
+			refresh();
+		}
+
+		*(begining+this->r[0]) = character;
+	}
+	else if (call == 1) {
+		addch(*(begining+this->r[0]));
+		refresh();
+	}
+
+	IP+=2;
+}
+
 
 void Brycore::execute() {
 	while(*IP) {
@@ -425,21 +455,8 @@ void Brycore::execute() {
 		}
 		else if (*IP == 58) {
 			LEA();
-		}
-		else if (*IP == 59) {
-			std::cout << "A: " << static_cast<unsigned>(r[0]) << std::endl;
-			std::cout << "B: " << static_cast<unsigned>(r[1]) << std::endl;
-			std::cout << "C: " << static_cast<unsigned>(r[2]) << std::endl;
-			std::cout << "D: " << static_cast<unsigned>(r[3]) << std::endl;
-			std::cout << "BP: " << static_cast<unsigned>(r[4]) << std::endl;
-			std::cout << "SP: " << static_cast<unsigned>(r[5]) << std::endl;
-			IP++;
-		}
-		else if (*IP == 60) {
-			std::cout << std::boolalpha;
-			std::cout << flag->CF << ":" << flag->ZF << std::endl;
-			std::cout << std::boolalpha;
-			IP++;
+		}else if (*IP == 59) {
+			IRQ();
 		}
 	}
 	std::cout << "[system] Program halted." << std::endl;

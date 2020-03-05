@@ -1,14 +1,14 @@
 # Brycore-8bit
->an 8-bit mirco processor simulator built in c++.
+>an 8-bit micro processor simulator built in c++.
 
 ## General features
 - 4 General purpose registers. (GPR)
-- 256 Bytes of random accessable memory. (RAM)
+- 256 Bytes of random accessible memory. (RAM)
 - Supports a stack and base pointer register.
 - Includes the python BRASM 8-bit Assembler.
-- 60 Opcodes including the debuging of registers and flags.
+- 60 Opcodes including the debugging of registers and flags.
 - Supports sub-routines using the call and ret operations.
-- intel x86 architecture.
+- Intel x86 architecture.
 ## Instruction and Label syntax
 in BRASM the instruction syntax isn't all that complicated, it goes something like **Instruction,  Destination, Source.**
 
@@ -118,13 +118,58 @@ Note: " the offset can range from 0-15 and works for addition and subtraction. "
 | 0x38 | CALL_4 | const | Jumps into a sub-routine and pushes the return address. |
 | 0x39 | RET | Null | Pops return address into the Instruction pointer. |
 | 0x3A | LEA_02 | reg, reg \w offset Addr | Moves the result of the Source operand into a register. |
-| 0x3B | DR | Null | Prints out the registers.
-| 0x3C | DF | Null | Prints out the flags 'CF/ZF'.
+| 0x3B | INT_4 | reg | Makes calls to the system interrupt vector.
+
+## interrupts
+> a list of all the available interrupts currently.
+
+| ID | Description |
+|----|-------------|
+| 0 | read char into constAddr of register A |
+| 1 | prints char from constAddr of register A |
+
+## Building the application
+
+### Requirements
+> these are the requirements for building/running the application.
+- an early/late build of the ncurses library.
+- a basic compiler for the c++ source code.
+- Python interpreter version 3 or greater.
+### building
+Building Brycore can be done with the built-in make file.
+
+    ~/Brycore-8bit/src$
+    make all
+if you want to built it using the command you have to make sure you include the ncurses library.
+
+    ~/Brycore-8bit/src$
+    g++ main.cpp lib/Brycore.cpp -l ncurses -o brycore
+    
+## Running the application
+Brycore requires one argument when running the program, the argument being the file of a brycore 8-bit binary. to create a brycore 8-bit binary you can use BRASM, which also takes one argument which is the assembly file you wish to assemble. For example:
+
+Creating an example assembly file.
+
+    ~/Brycore-8bit/src$
+    vim test.asm
+    
+    mov a, 34
+then you need to assemble it using BRASM.
+
+    ~/Brycore-8bit/src/BRASM$
+    python3 main.py
+    File name: test.asm
+    ...
+once assembled and turned into bytes you'll need to run the program to make sure its working the way you want.
+
+    ~/Brycore-8bit/src$
+    ./brycore BRASM/test.out
+
 ## Todo list
-- make a System call vector for I/O device commutication.
+- add more IRQ's for the system call vector.
 - make stronger exception handling for BRASM.
-- make a memory monitor/dump for debuging
-- make a step option for debuging
+- make a memory monitor/dump for debugging
+- make a step option for debugging
 - change the clock speed.
 ## Disclaimer
-Warning this is a beta verison of the software. while using this software you may experience bugs or crashes.  if you have an problem loading/running this program please report the issue. Thank you!
+Warning this is a beta version of the software. while using this software you may experience bugs or crashes.  if you have an problem loading/running this program please report the issue. Thank you!

@@ -7,6 +7,7 @@ public:
 	struct flags;
 	Brycore(char program[]);
 	~Brycore(void);
+	char gc();
 	bool render_carry(int test, flags *flag);
 	bool render_zero(int test, flags *flag);
 	bool render_zero(unsigned char test, flags *flag);
@@ -30,7 +31,7 @@ public:
 	void CALL();
 	void RET();
 	void LEA();
-	//void IRQ();
+	void IRQ();
 	
 
 	void execute();
