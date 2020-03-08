@@ -23,10 +23,6 @@ Brycore::~Brycore() {
 	endwin();
 }
 
-char Brycore::gc() {
-	return getch();
-}
-
 bool Brycore::render_carry(int test, flags *flag) {
 
 	if((test > 255) || (test < 0)) {
@@ -131,16 +127,16 @@ void Brycore::MOV() {
 
 void Brycore::JMP() {
 
-	char data, mode;
-	bool is_reg = *IP <= 18;
+	unsigned char data, mode;
+	bool is_reg = uint8c(*IP) <= 18;
 	bool jumped;
 
 	if (is_reg) { // reg or const.
 		data = r[*(IP+1)];
-		mode = *IP-11;
+		mode = uint8c(*IP)-11;
 	}else {
-		data = *(IP+1);
-		mode = *IP-18;
+		data = uint8c(*(IP+1));
+		mode = uint8c(*IP)-18;
 	}
 
 	switch(mode) {
@@ -199,7 +195,7 @@ void Brycore::ADD() {
 		r[*(IP+1)] += r[*(IP+2)];
 	}else {
 		test = r[*(IP+1)]+*(IP+2);
-		r[*(IP+1)] += *(IP+2);
+		r[*(IP+1)] += uint8c(*(IP+2));
 	};
 	render_carry(test, flag);
 	IP += 3;
@@ -213,8 +209,8 @@ void Brycore::SUB() {
 		test = r[*(IP+1)]-r[*(IP+2)];
 		r[*(IP+1)] -= r[*(IP+2)];
 	}else {
-		test = r[*(IP+1)] - *(IP+2);
-		r[*(IP+1)] -= *(IP+2);
+		test = r[*(IP+1)] - uint8c(*(IP+2));
+		r[*(IP+1)] -= uint8c(*(IP+2));
 	};
 	render_carry(test, flag);
 	render_zero(test, flag);
@@ -225,7 +221,7 @@ void Brycore::SUB() {
 void Brycore::MUL() {
 
 	if (*IP == 33) {
-	r[0] *= *(IP+1);
+	r[0] *= uint8c(*(IP+1));
 	} else {
 		r[0] *= r[*(IP+1)];
 	};
@@ -235,7 +231,7 @@ void Brycore::MUL() {
 void Brycore::DIV() {
 
 	if (*IP == 35) {
-	r[0] /= *(IP+1);
+	r[0] /= uint8c(*(IP+1));
 	} else {
 		r[0] /= r[*(IP+1)];
 	};
@@ -263,7 +259,7 @@ void Brycore::CMP() {
 	if(*IP == 39) { //reg, reg/[const]/[const+/-n]/const.
 		test = this->r[*(IP+1)]-this->r[*(IP+2)];
 	}else if (*IP == 40) {
-		test = this->r[*(IP+1)]-*(begining+*(IP+2));
+		test = this->r[*(IP+1)]-*(begining+uint8c(*(IP+2)));
 	}else if (*IP == 41) {
 		if (s != 1) {
 			 test = this->r[*(IP+1)] - *(begining+this->r[r]+c);
@@ -271,9 +267,9 @@ void Brycore::CMP() {
 			 test = this->r[*(IP+1)] - *(begining+this->r[r]-c);
 		};
 	}else if (*IP == 42) {
-		test = this->r[*(IP+1)] - *(IP+2);
+		test = this->r[*(IP+1)] - uint8c(*(IP+2));
 	}else {
-		test = this->r[*(IP+1)] - *(begining+this->r[*(IP+2)]);
+		test = this->r[*(IP+1)] - *(begining+this->r[uint8c(*(IP+2))]);
 	};
 
 	render_carry(test, flag);
@@ -284,7 +280,7 @@ void Brycore::CMP() {
 void Brycore::SHL() {
 
 	if (*IP == 44) {
-	r[0] = (r[0] << *(IP+1));
+	r[0] = (r[0] << uint8c(*(IP+1)));
 	} else {
 		r[0] = (r[0] << r[*(IP+1)]);
 	};
@@ -295,7 +291,7 @@ void Brycore::SHL() {
 void Brycore::SHR() {
 
 	if (*IP == 46) {
-	r[0] = (r[0] >> *(IP+1));
+	r[0] = (r[0] >> uint8c(*(IP+1)));
 	} else {
 		r[0] = (r[0] >> r[*(IP+1)]);
 	};
@@ -352,7 +348,7 @@ void Brycore::CALL() {
 	}else {
 		--r[5];
 		*(begining+r[5]) = (IP - begining)+2;
-		IP = begining+*(IP+1);
+		IP = begining+uint8c(*(IP+1));
 	};
 }
 
@@ -380,21 +376,20 @@ void Brycore::LEA() {
 void Brycore::IRQ() {
 	unsigned char call = *(IP+1);
 	if (call == 0) { // get char.
-		unsigned char character = gc();
+		unsigned char character = getch();
 
 		if (character == 10) {
 			int x, y;
 			getyx(stdscr,y, x);
 			move(y+1,x);
-			refresh();
-		}
+		};
 
 		*(begining+this->r[0]) = character;
 	}
 	else if (call == 1) {
 		addch(*(begining+this->r[0]));
 		refresh();
-	}
+	};
 
 	IP+=2;
 }
@@ -459,5 +454,7 @@ void Brycore::execute() {
 			IRQ();
 		}
 	}
-	std::cout << "[system] Program halted." << std::endl;
+	printw("\n[system] Program halted.");
+	refresh();
+	getch();
 }

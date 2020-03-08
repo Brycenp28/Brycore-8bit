@@ -4,14 +4,14 @@
 class Brycore {
 
 public:
+
 	struct flags;
 	Brycore(char program[]);
 	~Brycore(void);
-	char gc();
 	bool render_carry(int test, flags *flag);
 	bool render_zero(int test, flags *flag);
 	bool render_zero(unsigned char test, flags *flag);
-	void MOV(); // needs testing.
+	void MOV();
 	void JMP();
 	void PUSH();
 	void POP();
@@ -35,10 +35,16 @@ public:
 	
 
 	void execute();
+
 private:
+
 	flags *flag;
 	unsigned char r[6] = {};
 	char *IP, *begining;
+
+	inline unsigned char uint8c(char a) {
+		return static_cast<unsigned char>(a);
+	};
 };
 
 #endif
