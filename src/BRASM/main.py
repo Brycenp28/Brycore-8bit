@@ -127,17 +127,12 @@ def get_local_label(label_name,ip):
 		n.append(names)
 		v.append(values)
 
-	print("ip: ", ip)
-
 	for i, value in enumerate(v):
-		print("index: {0}, value: {1}".format(i,value))
 
 		if ip >= value:
 			location = i
 
 	name = n[location] + label_name
-
-	print("Name: {0}, location: {1}.".format(name,labels[name]))
 
 	return str(labels[name])
 
@@ -153,6 +148,7 @@ def check_label(c,ip,raw=False):
 			label = str(labels[regex.search(c).group(1)])
 
 		if not raw:
+			print(label)
 			return c.replace(regex.search(c).group(0), label)
 
 		return label
@@ -206,7 +202,6 @@ def translate(index, data, ip):
 	mode = getArgMode(data,ip)
 	raw_mode = getArgMode(data, ip, True)
 	bytelist = []
-	print(mode)
 
 	if isnumeric_array(data) == 1:
 		for n in data:
