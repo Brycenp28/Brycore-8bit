@@ -40,7 +40,7 @@ main:
 	int 0
 	ret
 
-read: ; (char* buffer, char size) 100 bytes.
+read: ; (char* buffer, char size) 30 bytes.
 	push c
 .read_loop:
 	int 0
@@ -54,7 +54,7 @@ read: ; (char* buffer, char size) 100 bytes.
 .read_exit:
 	mov [a-1], 0
 	xor a, a
-	pop b
+	pop c
 	ret
 
 
