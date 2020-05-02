@@ -23,7 +23,7 @@ Brycore::~Brycore() {
 	endwin();
 }
 
-bool Brycore::render_carry(int test, flags *flag) {
+bool Brycore::render_carry(unsigned int test, flags *flag) {
 
 	if((test > 255) || (test < 0)) {
 		flag->CF = true;
@@ -35,7 +35,7 @@ bool Brycore::render_carry(int test, flags *flag) {
 	return false;
 }
 
-bool Brycore::render_zero(int test, flags *flag) {
+bool Brycore::render_zero(unsigned int test, flags *flag) {
 
 	if(!test) {
 			flag->ZF = true;
@@ -203,7 +203,7 @@ void Brycore::ADD() {
 
 void Brycore::SUB() {
 	
-	int test;
+	unsigned int test;
 	
 	if(*IP == 31) { // SUB reg, reg/const
 		test = r[*(IP+1)]-r[*(IP+2)];
@@ -250,7 +250,7 @@ void Brycore::DEC() {
 
 void Brycore::CMP() {
 	unsigned char s,c,r;
-	int test;
+	unsigned int test;
 
 	s = (*(IP+2) & 128) >> 7;
 	c = (*(IP+2) & 120) >> 3;
@@ -269,7 +269,7 @@ void Brycore::CMP() {
 	}else if (*IP == 42) {
 		test = this->r[*(IP+1)] - uint8c(*(IP+2));
 	}else {
-		test = this->r[*(IP+1)] - *(begining+this->r[uint8c(*(IP+2))]);
+		test = this->r[*(IP+1)] - *(begining+this->r[*(IP+2)]);
 	};
 
 	render_carry(test, flag);

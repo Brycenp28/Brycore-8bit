@@ -1,4 +1,6 @@
 import re
+import os.path
+from os import path
 
 instructions = {
 'HLT_':0,
@@ -106,6 +108,8 @@ registers = {
 'BP':4,
 'SP':5
 }
+
+labels = {}
 
 def locate_labels(inst):
 
@@ -303,6 +307,10 @@ def assemble(data=None):
 		file_name = input("File name: ")
 		file_out = re.sub(r'(?!\w+)\.\w{1,3}', '.out', file_name)
 
+	if not path.exists(file_name):
+		print("brasm > the file couldn't be found.")
+		exit()
+
 	with open(file_name,"r") as file:
 		lines = file.readlines()
 		lines = [x.strip() for x in lines]
@@ -351,14 +359,14 @@ def assemble(data=None):
 
 		print("brasm > locating labels.")
 
-		labels = locate_labels(inst) # override existing labels varible with binary type conversion.
+		global labels # initialize global instance 'labels'.
+
+		labels = locate_labels(inst) # override existing 'labels' varible.
 
 		if labels == {}:
 			print("brasm > no labels found.")
 		else:
 			print(labels)
-		
-		print(inst)
 
 		if not pointers == []:
 			
@@ -368,9 +376,6 @@ def assemble(data=None):
 				if v[0] in pointers:
 					ptr = v[0]
 					inst[i][0] = str(labels[ptr])
-
-		print(inst)
-
 
 		ip = 0
 		bytelist2 = [] #binary version.

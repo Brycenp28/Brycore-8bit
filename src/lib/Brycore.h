@@ -8,8 +8,8 @@ public:
 	struct flags;
 	Brycore(char program[]);
 	~Brycore(void);
-	bool render_carry(int test, flags *flag);
-	bool render_zero(int test, flags *flag);
+	bool render_carry(unsigned int test, flags *flag);
+	bool render_zero(unsigned int test, flags *flag);
 	bool render_zero(unsigned char test, flags *flag);
 	void MOV();
 	void JMP();
