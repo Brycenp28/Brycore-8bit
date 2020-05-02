@@ -107,7 +107,41 @@ registers = {
 'SP':5
 }
 
-labels = {} # list for all the labels with adresses.
+def locate_labels(inst):
+
+	labels = {}
+	last_label = str()
+	ip = 0
+	label = ''
+
+	for i, c in enumerate(inst):
+
+		label = re.search(r'((?=[a-zA-z_\.])[a-zA-Z0-9_\.]*):',c[0])
+
+
+		for i, c2 in enumerate(c): # strips comments.
+			if ';' in c2:
+				for i2 in range(len(c) - i):
+					c.pop(i)
+				break
+
+		if (label == None):
+			ip += len(c)
+			continue
+		else:
+			if '.' in label.group(1):
+				labels[label.group(1).replace('.',last_label + '.')] = ip
+				print("brasm > added local label for {0} at location {1}.".format(last_label,ip))
+				continue
+			else:
+				last_label = label.group(1)
+
+		if (not label.group(1) in labels) or (not last_label+label.group(1) in labels):
+			labels[label.group(1)] = ip
+			print("brasm > added label {0} at location {1}.".format(label.group(1),str(ip)))
+		else:
+			print("ERR brasm > Redeclaration of label {0}.".format(label.group(1)))
+	return labels
 
 def isnumeric_array(data):
 	for c in data:
@@ -148,7 +182,6 @@ def check_label(c,ip,raw=False):
 			label = str(labels[regex.search(c).group(1)])
 
 		if not raw:
-			print(label)
 			return c.replace(regex.search(c).group(0), label)
 
 		return label
@@ -277,9 +310,10 @@ def assemble(data=None):
 
 		inst = []
 
-		print("brasm > grouping instruction data.")
+		print("brasm > converting data types...")
 
 		replace_array = []
+		pointers = []
 
 		for i, c in enumerate(lines):
 			if ".STR" in c.upper():
@@ -293,7 +327,7 @@ def assemble(data=None):
 
 		for i, c in enumerate(lines):
 			inst.append(re.findall(r'\S+', lines[i]))
-			inst = [x for x in inst if x != []]
+		inst = [x for x in inst if x != []]
 
 		for i, c in enumerate(inst):
 			if "DZ" in c[0].upper():
@@ -304,54 +338,46 @@ def assemble(data=None):
 				continue 
 			if "DB" in c[0].upper():
 				for i2 in range(1,len(inst[i])):
+					if inst[i][i2].isnumeric() == False:
+						print("pointer found: ",inst[i][i2])
+						ptr = inst[i][i2].replace('%','')
+						pointers.append(ptr)
+						replace_array.append(ptr)
+						continue
 					replace_array.append(inst[i][i2])
 				inst[i] = replace_array
 				replace_array = []
 				continue
 
-		ip = 0
 		print("brasm > locating labels.")
 
-		last_label = str()
-
-		for i, c in enumerate(inst):
-
-			label = re.search(r'((?=[a-zA-z_\.])[a-zA-Z0-9_\.]*):',c[0])
-
-
-			for i, c2 in enumerate(c): # strips comments.
-				if ';' in c2:
-					for i2 in range(len(c) - i):
-						c.pop(i)
-					break
-
-			if (label == None):
-				ip += len(c)
-				continue
-			else:
-				if '.' in label.group(1):
-					labels[label.group(1).replace('.',last_label + '.')] = ip
-					print("brasm > added local label for {0} at location {1}.".format(last_label,ip))
-					continue
-				else:
-					last_label = label.group(1)
-
-			if (not label.group(1) in labels) or (not last_label+label.group(1) in labels):
-				labels[label.group(1)] = ip
-				print("brasm > added label {0} at location {1}.".format(label.group(1),str(ip)))
-			else:
-				print("ERR brasm > Redeclaration of label {0}.".format(label.group(1)))
+		labels = locate_labels(inst) # override existing labels varible with binary type conversion.
 
 		if labels == {}:
 			print("brasm > no labels found.")
 		else:
 			print(labels)
+		
+		print(inst)
+
+		if not pointers == []:
+			
+			print("brasm > injecting pointer addresses.")
+
+			for i, v in enumerate(inst):
+				if v[0] in pointers:
+					ptr = v[0]
+					inst[i][0] = str(labels[ptr])
+
+		print(inst)
+
 
 		ip = 0
 		bytelist2 = [] #binary version.
+		
 		for x in labels:
-			last_label = x
-			break # to get the first label to start the program
+			last_label = x # to get the first label to start the program
+			break
 
 		for i, c in enumerate(inst):
 			if c == []:
